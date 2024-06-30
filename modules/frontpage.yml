@@ -1,0 +1,17 @@
+# Configuration for the frontpage module
+
+# List of newspaper prefixes to fetch front pages for
+newspapers:
+  - WSJ  # Wall Street Journal
+  - NY_NYT  # New York Times
+  - WP # Washington Post
+
+# Options for image processing
+image_options:
+  max_width: 800  # Maximum width of the image in pixels
+  quality: 85  # JPEG quality (0-100)
+
+# Additional options
+options:
+  include_date: true  # Include the date of the front page
+  cache_duration: 86400  # Cache duration in seconds (24 hours)

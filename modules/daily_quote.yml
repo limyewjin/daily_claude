@@ -1,0 +1,5 @@
+api:
+  url: "https://api.quotable.io/random"
+options:
+  include_author: true
+cache_duration: 86400  # Cache for 24 hours

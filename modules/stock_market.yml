@@ -1,0 +1,9 @@
+api:
+  url: "https://www.alphavantage.co/query"
+symbols:
+  - "SPY"  # S&P 500
+  - "DIA"   # Dow Jones Industrial Average
+  - "NDAQ"  # NASDAQ Composite
+options:
+  include_change_percent: true
+cache_duration: 3600  # Cache for 1 hour

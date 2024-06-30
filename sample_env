@@ -1,0 +1,9 @@
+INCLUDE=weather.yml:word_of_day.yml:daily_quote.yml:stock_market.yml:crypto_price.yml:frontpage.yml
+
+ALPHA_VANTAGE_API_KEY=KEY
+ANTHROPIC_API_KEY=KEY
+SENDER_EMAIL=FROM_EMAIL_ADDRESS
+RECEIVER_EMAIL=TO_EMAIL_ADDRESS
+SMTP_PASSWORD=APP_PASSWORD_FOR_GMAIL
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587

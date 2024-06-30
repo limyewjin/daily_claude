@@ -1,0 +1,6 @@
+api:
+  url: "https://api.dictionaryapi.dev/api/v2/entries/en/"
+options:
+  include_definition: true
+  include_example: true
+cache_duration: 86400  # Cache for 24 hours

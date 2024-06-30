@@ -1,0 +1,19 @@
+# Configuration for the crypto price module
+
+# List of cryptocurrency IDs to fetch prices for
+# These IDs should match those used by the CoinGecko API
+#  - dogecoin
+#  - cardano
+crypto_ids:
+  - bitcoin
+  - ethereum
+  - solana
+
+# Currency to display prices in
+currency: usd
+
+# Additional options
+options:
+  include_24h_change: true
+  include_market_cap: true
+  max_coins: 10  # Limit the number of coins to display

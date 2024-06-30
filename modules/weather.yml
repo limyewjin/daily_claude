@@ -1,0 +1,16 @@
+# Configuration for the weather module
+
+# Location settings
+location:
+  latitude: 37.3193
+  longitude: -122.0293
+  name: "Cupertino, CA"  # Optional: You can add a name for the location
+
+# Options for weather information
+options:
+  include_top_news: true
+  include_hazards: true
+  forecast_days: 5  # Number of days to include in the detailed forecast
+
+# Cache settings
+cache_duration: 3600  # Cache duration in seconds (1 hour)
