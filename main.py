@@ -433,7 +433,7 @@ def create_email_body(report_data):
     try:
         current_datetime = datetime.now()
         context = {
-            'date': current_datetime.strftime('%Y-%m-%d'),
+            'date': current_datetime.strftime('%A, %b %d, %Y'),
             'time': current_datetime.strftime('%H:%M:%S'),
             'report_data': report_data
         }
@@ -528,7 +528,8 @@ def main():
     email_body = create_email_body(report_data)
     
     # Send email
-    subject = f"Your Daily Brief for {datetime.now().strftime('%Y-%m-%d')}"
+    formatted_date = datetime.now().strftime('%A, %b %d, %Y'),
+    subject = f"Your Daily Brief for {formatted_date}"
     send_email(subject, email_body)
     with open('body.html', 'w') as f:
       f.write(email_body)
