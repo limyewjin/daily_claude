@@ -528,7 +528,7 @@ def main():
     email_body = create_email_body(report_data)
     
     # Send email
-    formatted_date = datetime.now().strftime('%A, %b %d, %Y'),
+    formatted_date = datetime.now().strftime('%A, %b %d, %Y')
     subject = f"Your Daily Brief for {formatted_date}"
     send_email(subject, email_body)
     with open('body.html', 'w') as f:
