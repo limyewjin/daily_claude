@@ -4,7 +4,7 @@
 location:
   latitude: 37.3193
   longitude: -122.0293
-  name: "Cupertino, CA"  # Optional: You can add a name for the location
+  name: "Saratoga, CA"  # Optional: You can add a name for the location
 
 # Options for weather information
 options:
@@ -14,3 +14,5 @@ options:
 
 # Cache settings
 cache_duration: 3600  # Cache duration in seconds (1 hour)
+
+include_in_summary: true

@@ -149,7 +149,7 @@
                 <th>24h Change</th>
                 <th>Market Cap</th>
             </tr>
-            {% for crypto in report_data['crypto_price.yml'] %}
+            {% for crypto in report_data['crypto_price.yml']['formatted_data'] %}
             <tr>
                 <td>{{ crypto.name }} ({{ crypto.symbol|upper }})</td>
                 <td>${{ "%.2f"|format(crypto.current_price) }}</td>

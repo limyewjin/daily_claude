@@ -67,7 +67,10 @@ def is_cache_valid(cache_path, ttl=None):
 
 def process_module(module_name, config):
     logging.info(f"Processing module: {module_name}")
-    
+
+    common = {}
+    common['include_in_summary'] = config.get('include_in_summary', False)
+
     if module_name == 'crypto_price.yml':
         cache_path = get_cache_path(module_name)
         ttl = config.get('cache_ttl', 3600)  # Default TTL of 1 hour if not specified
@@ -111,7 +114,9 @@ def process_module(module_name, config):
         with open(cache_path, 'w') as cache_file:
             json.dump(cache_data, cache_file)
 
-        return formatted_data
+        data = {'formatted_data': formatted_data}
+        data.update(common)
+        return data
 
     elif module_name == 'frontpage.yml':
         newspapers = config.get('newspapers', [])
@@ -177,6 +182,7 @@ Please ensure your response is concise, informative, and uses proper HTML format
                     'analysis': analysis
                 }
         
+        frontpages.update(common)
         return frontpages
 
     elif module_name == 'weather.yml':
@@ -209,6 +215,8 @@ Please ensure your response is concise, informative, and uses proper HTML format
         weather_results['detailed_forecast'] = dict(list(weather_results['detailed_forecast'].items())[:forecast_days*2])
 
         # Cache the new data
+        weather_results.update(common)
+
         cache_data = {
             'timestamp': time.time(),
             'data': weather_results
@@ -248,6 +256,7 @@ Please ensure your response is concise, informative, and uses proper HTML format
             with open(cache_path, 'w') as cache_file:
                 json.dump(cache_data, cache_file)
             
+            word_data.update(common)
             return word_data
         else:
             logging.error(f"Failed to fetch word of the day: {response.status_code}")
@@ -324,6 +333,7 @@ Please ensure your response is concise, informative, and uses proper HTML format
             with open(cache_path, 'w') as cache_file:
                 json.dump(cache_data, cache_file)
             
+            stock_data.update(common)
             return stock_data
         else:
             logging.error("Failed to fetch any stock market data")
@@ -333,7 +343,10 @@ Please ensure your response is concise, informative, and uses proper HTML format
         # For other modules, you might use Claude to process the data
         module_data = f"Data for {module_name}: {config}"
         prompt = f"Please summarize the following data for the daily brief: {module_data}"
-        return generate_anthropic_response([{"role": "user", "content": prompt}])
+        response = generate_anthropic_response([{"role": "user", "content": prompt}])
+        data = {'text': response[0].text }
+        data.update(common)
+        return data
 
 def generate_report(modules):
     report_data = {}
@@ -366,52 +379,44 @@ def generate_overview(report_data):
     # Prepare a summary of the report data
     summary = "Today's report includes:\n"
 
-    if 'weather.yml' in report_data:
-        weather_data = report_data['weather.yml']
-        location = weather_data.get('location', 'the specified location')
-        summary += f"- Weather information for {location}\n"
+    for config in report_data:
+        if 'include_in_summary' not in report_data[config] or not report_data[config]['include_in_summary']: continue
         
-        if 'hazards' in weather_data and weather_data['hazards']:
-            hazards = [re.sub('<[^<]+?>', '', hazard) for hazard in weather_data['hazards']]
-            summary += f"  - Hazardous conditions: {', '.join(hazards)}\n"
-        
-        if 'detailed_forecast' in weather_data:
-            today_forecast = next(iter(weather_data['detailed_forecast'].values()), "No forecast available")
-            today_forecast = re.sub('<[^<]+?>', '', today_forecast)  # Remove HTML tags
-            summary += f"  - Today's forecast: {today_forecast}\n"
-    
-        weather_data = report_data['weather.yml']
-        location = weather_data.get('location', 'the specified location')
-        summary += f"- Weather information for {location}\n"
-        
-        if 'hazards' in weather_data and weather_data['hazards']:
-            hazards = [re.sub('<[^<]+?>', '', hazard) for hazard in weather_data['hazards']]
-            summary += f"  - Hazardous conditions: {', '.join(hazards)}\n"
-        
-        if 'detailed_forecast' in weather_data:
-            today_forecast = next(iter(weather_data['detailed_forecast'].values()), "No forecast available")
-            today_forecast = re.sub('<[^<]+?>', '', today_forecast)  # Remove HTML tags
-            summary += f"  - Today's forecast: {today_forecast}\n"
-    if 'crypto_price.yml' in report_data:
-        crypto_summary = ", ".join([f"{c['name']}: ${c['current_price']:.2f}" for c in report_data['crypto_price.yml'][:3]])
-        summary += f"- Cryptocurrency prices (including {crypto_summary})\n"
-    
-    if 'frontpage.yml' in report_data:
-        newspapers = ", ".join(report_data['frontpage.yml'].keys())
-        summary += f"- Front page news analysis from {newspapers}\n"
-
-    if 'stock_market.yml' in report_data:
-        stock_data = report_data['stock_market.yml']
-        stock_summary = ", ".join([f"{symbol}: {data['change_percent']}" for symbol, data in stock_data.items()])
-        summary += f"- Stock market summary ({stock_summary})\n"
-
-    if 'word_of_day.yml' in report_data:
-        word_data = report_data['word_of_day.yml']
-        summary += f"- Word of the Day: {word_data['word']}\n"
-
-    if 'daily_quote.yml' in report_data:
-        quote_data = report_data['daily_quote.yml']
-        summary += f"- Daily Quote by {quote_data['author']}\n"
+        if config == 'weather.yml':
+            weather_data = report_data['weather.yml']
+            location = weather_data.get('location_name', 'the specified location')
+            summary += f"- Weather information for {location}\n"
+            
+            if 'hazards' in weather_data and weather_data['hazards']:
+                hazards = [re.sub('<[^<]+?>', '', hazard) for hazard in weather_data['hazards']]
+                summary += f"  - Hazardous conditions: {', '.join(hazards)}\n"
+            
+            if 'detailed_forecast' in weather_data:
+                today_forecast = next(iter(weather_data['detailed_forecast'].values()), "No forecast available")
+                today_forecast = re.sub('<[^<]+?>', '', today_forecast)  # Remove HTML tags
+                summary += f"  - Today's forecast: {today_forecast}\n"
+        elif config == 'crypto_price.yml':
+            crypto_summary = ", ".join([f"{c['name']}: ${c['current_price']:.2f}" for c in report_data['crypto_price.yml']['formatted_data']])
+            summary += f"- Cryptocurrency prices (including {crypto_summary})\n"
+        elif config == 'frontpage.yml':
+            newspapers = ", ".join([paper for paper in report_data['frontpage.yml'].keys() if paper != 'include_in_summary'])
+            summary += f"- Front page news analysis from {newspapers}\n"
+            for paper in report_data['frontpage.yml']:
+              if paper == 'include_in_summary': continue
+              summary += f"  - {paper}: {report_data['frontpage.yml'][paper]}\n"
+        elif config == 'stock_market.yml':
+            stock_data = report_data['stock_market.yml']
+            stock_summary = ", ".join([f"{symbol}: {data['change_percent']}" for symbol, data in stock_data.items()])
+            summary += f"- Stock market summary ({stock_summary})\n"
+        elif config == 'word_of_day.yml':
+            word_data = report_data['word_of_day.yml']
+            summary += f"- Word of the Day: {word_data['word']}\n"
+        elif config == 'daily_quote.yml':
+            quote_data = report_data['daily_quote.yml']
+            summary += f"- Daily Quote by {quote_data['author']}\n"
+        else:
+            data = report_data[config]
+            summary += f"- Unnamed data {data}\n"
 
     prompt = f"""Create a concise overview of today's report, highlighting the most important points and any notable trends or connections between different areas. The overview should be engaging and informative, suitable as the opening of a daily brief email for busy professionals.
 
@@ -421,6 +426,8 @@ Summary of report contents:
 {summary}
 
 Format your response in HTML, using appropriate tags for structure and emphasis. The overview should be about 2-3 paragraphs long."""
+
+    logging.debug(f"Prompt being sent: {prompt}")
 
     overview = generate_anthropic_response([{'role': 'user', 'content': prompt}])
     return overview[0].text

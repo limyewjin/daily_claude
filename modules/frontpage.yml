@@ -15,3 +15,5 @@ image_options:
 options:
   include_date: true  # Include the date of the front page
   cache_duration: 86400  # Cache duration in seconds (24 hours)
+
+include_in_summary: true

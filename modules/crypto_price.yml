@@ -17,3 +17,5 @@ options:
   include_24h_change: true
   include_market_cap: true
   max_coins: 10  # Limit the number of coins to display
+
+include_in_summary: true
