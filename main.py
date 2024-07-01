@@ -93,7 +93,8 @@ def process_module(module_name, config):
         )
 
         # Filter and format the data based on options
-        formatted_data = []
+        formatted_data = {}
+        crypto_list = []
         for crypto in crypto_data:
             crypto_info = {
                 'name': crypto['name'],
@@ -104,9 +105,11 @@ def process_module(module_name, config):
                 crypto_info['price_change_24h'] = crypto['price_change_percentage_24h']
             if options.get('include_market_cap'):
                 crypto_info['market_cap'] = crypto['market_cap']
-            formatted_data.append(crypto_info)
+            crypto_list.append(crypto_info)
+        formatted_data['crypto_list'] = crypto_list
 
         # Cache the new data
+        formatted_data.update(common)
         cache_data = {
             'timestamp': time.time(),
             'data': formatted_data
@@ -114,9 +117,7 @@ def process_module(module_name, config):
         with open(cache_path, 'w') as cache_file:
             json.dump(cache_data, cache_file)
 
-        data = {'formatted_data': formatted_data}
-        data.update(common)
-        return data
+        return formatted_data
 
     elif module_name == 'frontpage.yml':
         newspapers = config.get('newspapers', [])
@@ -396,7 +397,7 @@ def generate_overview(report_data):
                 today_forecast = re.sub('<[^<]+?>', '', today_forecast)  # Remove HTML tags
                 summary += f"  - Today's forecast: {today_forecast}\n"
         elif config == 'crypto_price.yml':
-            crypto_summary = ", ".join([f"{c['name']}: ${c['current_price']:.2f}" for c in report_data['crypto_price.yml']['formatted_data']])
+            crypto_summary = ", ".join([f"{c['name']}: ${c['current_price']:.2f} price_change_24h: {c['price_change_24h']}" for c in report_data['crypto_price.yml']['crypto_list']])
             summary += f"- Cryptocurrency prices (including {crypto_summary})\n"
         elif config == 'frontpage.yml':
             newspapers = ", ".join([paper for paper in report_data['frontpage.yml'].keys() if paper != 'include_in_summary'])
@@ -418,14 +419,17 @@ def generate_overview(report_data):
             data = report_data[config]
             summary += f"- Unnamed data {data}\n"
 
-    prompt = f"""Create a concise overview of today's report, highlighting the most important points and any notable trends or connections between different areas. The overview should be engaging and informative, suitable as the opening of a daily brief email for busy professionals.
 
-Start the overview directly with the content, without any introductory phrases like "Here's an overview" or "Today's overview". The tone should be professional and insightful.
+    prompt = f"""Create a concise overview of today's report, highlighting the most important points and any notable trends. The overview should be engaging, informative, and action-oriented, suitable as the opening of a daily brief email for busy professionals.
+
+Start the overview directly with the content, without any introductory phrases. The tone should be professional and insightful. Focus on providing actionable insights or key takeaways that the reader can use to inform their day.
+
+Limit the overview to 1-3 paragraphs. Avoid broad generalizations or philosophical musings about the interconnectedness of events. Instead, concentrate on specific, important information and its potential impact on the reader's day or decisions.
 
 Summary of report contents:
 {summary}
 
-Format your response in HTML, using appropriate tags for structure and emphasis. The overview should be about 2-3 paragraphs long."""
+Format your response in HTML, using appropriate tags for structure and emphasis."""
 
     logging.debug(f"Prompt being sent: {prompt}")
 

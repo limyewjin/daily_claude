@@ -149,7 +149,7 @@
                 <th>24h Change</th>
                 <th>Market Cap</th>
             </tr>
-            {% for crypto in report_data['crypto_price.yml']['formatted_data'] %}
+            {% for crypto in report_data['crypto_price.yml']['crypto_list'] %}
             <tr>
                 <td>{{ crypto.name }} ({{ crypto.symbol|upper }})</td>
                 <td>${{ "%.2f"|format(crypto.current_price) }}</td>
@@ -165,11 +165,13 @@
     <div class="section news-section">
         <h2>Today's Front Page News Analysis</h2>
         {% for newspaper, data in report_data['frontpage.yml'].items() %}
-            <h3>{{ newspaper }}</h3>
-            <p><strong>Date:</strong> {{ data.date }}</p>
-            <div class="analysis">
-                {{ data.analysis|safe }}
-            </div>
+            {% if newspaper != 'include_in_summary' %}
+              <h3>{{ newspaper }}</h3>
+              <p><strong>Date:</strong> {{ data.date }}</p>
+              <div class="analysis">
+                  {{ data.analysis|safe }}
+              </div>
+            {% endif %}
         {% endfor %}
     </div>
     {% endif %}
