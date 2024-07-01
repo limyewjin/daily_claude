@@ -5,6 +5,7 @@ from PIL import Image
 import pdf2image
 import base64
 
+
 def fetch_paper(prefix, offset=0):
     date = datetime.now() - timedelta(days=offset)
     path_to_pdf = f"https://cdn.freedomforum.org/dfp/pdf{date.day}/{prefix}.pdf"
@@ -20,9 +21,10 @@ def fetch_paper(prefix, offset=0):
             # Save PDF
             with open(pdf_file, 'wb') as f:
                 f.write(response.content)
-            
+
             # Convert PDF to JPG
-            images = pdf2image.convert_from_path(pdf_file, dpi=300, first_page=1, last_page=1)
+            images = pdf2image.convert_from_path(
+                pdf_file, dpi=300, first_page=1, last_page=1)
             if images:
                 img = images[0]
                 # Resize image to have long edge of 1568 pixels
@@ -35,7 +37,7 @@ def fetch_paper(prefix, offset=0):
                     new_width = int(width * (1568 / height))
                 img = img.resize((new_width, new_height))
                 img.save(jpg_file, format="JPEG", quality=85)
-            
+
             return jpg_file
     else:
         return jpg_file
@@ -56,15 +58,15 @@ def jpg_to_base64(file_path):
 
 
 if __name__ == "__main__":
-  # Usage
-  newspapers = ["WSJ"]
-  # Uncomment to add New York Times
-  # newspapers.append("NY_NYT")
+    # Usage
+    newspapers = ["WSJ"]
+    # Uncomment to add New York Times
+    # newspapers.append("NY_NYT")
 
-  # Example usage
-  for prefix in newspapers:
-      result = fetch_paper(prefix)
-      if result:
-          print(f"Successfully fetched and converted: {result}")
-      else:
-          print(f"Failed to fetch or convert: {prefix}")
+    # Example usage
+    for prefix in newspapers:
+        result = fetch_paper(prefix)
+        if result:
+            print(f"Successfully fetched and converted: {result}")
+        else:
+            print(f"Failed to fetch or convert: {prefix}")

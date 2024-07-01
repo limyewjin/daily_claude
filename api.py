@@ -20,48 +20,69 @@ anthropic_client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 # Set up logging
 parser = argparse.ArgumentParser()
-parser.add_argument('--loglevel', default='WARNING', help='Set the logging level')
+parser.add_argument(
+    '--loglevel',
+    default='WARNING',
+    help='Set the logging level')
 args = parser.parse_args()
 log_level = args.loglevel.upper()
-logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=log_level,
+    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-@retry(stop_max_attempt_number=3, wait_exponential_multiplier=100, wait_exponential_max=1000)
+@retry(stop_max_attempt_number=3,
+       wait_exponential_multiplier=100,
+       wait_exponential_max=1000)
 # Define a decorator to handle retrying on specific exceptions
-def generate_anthropic_response(messages, temperature=0.0, max_tokens=4096, model="claude-3-5-sonnet-20240620"):
-  try:
-    response = anthropic_client.messages.create(
-      model=model,
-      max_tokens=max_tokens,
-      temperature=temperature,
-      messages=messages)
-    return response.content
-  except Exception as e:
-    print(f"Unexpected error: {e}")
-    raise
+def generate_anthropic_response(
+        messages,
+        temperature=0.0,
+        max_tokens=4096,
+        model="claude-3-5-sonnet-20240620"):
+    try:
+        response = anthropic_client.messages.create(
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            messages=messages)
+        return response.content
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        raise
+
 
 def navigate(url):
     try:
-      with sync_playwright() as p:
-          browser = p.firefox.launch()
-          page = browser.new_page()
-          page.goto(url)
-          page.wait_for_load_state()
-          page.wait_for_timeout(5000)
-          text = page.content()
-          return text.replace("<|endoftext|>", "<endoftext>")
-      return None
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+            page = browser.new_page()
+            page.goto(url)
+            page.wait_for_load_state()
+            page.wait_for_timeout(5000)
+            text = page.content()
+            return text.replace("<|endoftext|>", "<endoftext>")
+        return None
     except Exception as e:
-      return str(e)
+        return str(e)
 
-def navigate_and_screenshot(url, screenshot_path="screenshot.png", width=1280, height=720):
+
+def navigate_and_screenshot(
+        url,
+        screenshot_path="screenshot.png",
+        width=1280,
+        height=720):
     try:
         with sync_playwright() as p:
             browser = p.firefox.launch()
-            page = browser.new_page(viewport={'width': width, 'height': height})
+            page = browser.new_page(
+                viewport={
+                    'width': width,
+                    'height': height})
             page.goto(url)
             page.wait_for_load_state('networkidle')
-            page.wait_for_timeout(5000)  # Optional: Adjust the timeout as needed
+            # Optional: Adjust the timeout as needed
+            page.wait_for_timeout(5000)
             page.screenshot(path=screenshot_path)
             text = page.content()
             browser.close()
@@ -69,11 +90,14 @@ def navigate_and_screenshot(url, screenshot_path="screenshot.png", width=1280, h
     except Exception as e:
         return str(e)
 
+
 def get_url(url):
     html = navigate(url)
-    if html is None: return None
+    if html is None:
+        return None
     h = html2text.HTML2Text()
     return h.handle(html)
+
 
 def send_email(subject, body):
     sender_email = os.environ["SENDER_EMAIL"]
@@ -89,7 +113,7 @@ def send_email(subject, body):
 
     # Attach body to the email
     message.attach(MIMEText(body, "html"))
-  
+
     try:
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()
@@ -102,7 +126,13 @@ def send_email(subject, body):
         logging.debug(f"Email body: {body}")
         raise
 
-def fetch_crypto_data(crypto_ids, vs_currency='usd', order='market_cap_desc', per_page=100, price_change_percentage='24h'):
+
+def fetch_crypto_data(
+        crypto_ids,
+        vs_currency='usd',
+        order='market_cap_desc',
+        per_page=100,
+        price_change_percentage='24h'):
     base_url = "https://api.coingecko.com/api/v3/coins/markets"
     params = {
         "vs_currency": vs_currency,
