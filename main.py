@@ -42,25 +42,26 @@ def load_module(module_name):
         logging.error(f"Module file modules/{module_name} not found")
         return None
 
-def get_cache_path(module_name, data_hash=None):
+def get_cache_path(module_name):
     cache_dir = "cache"
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
-    if data_hash:
-        return os.path.join(cache_dir, f"{module_name}_{data_hash}.json")
     return os.path.join(cache_dir, f"{module_name}_cache.json")
 
-def is_cache_valid(cache_path, ttl=None):
+def is_cache_valid(cache_path, ttl=None, data_hash=None):
     if not os.path.exists(cache_path):
         return False
     try:
         print(f"loading {cache_path}")
         with open(cache_path, "r") as cache_file:
             cache_data = json.load(cache_file)
-        if ttl is None:
-            return True
-        cache_time = datetime.fromtimestamp(cache_data['timestamp'])
-        return datetime.now() - cache_time < timedelta(seconds=ttl)
+        if data_hash is not None:
+          return data_hash == cache_data['data_hash']
+        else:
+          if ttl is None:
+              return True
+          cache_time = datetime.fromtimestamp(cache_data['timestamp'])
+          return datetime.now() - cache_time < timedelta(seconds=ttl)
     except Exception as e:
         print(f"is_cache_valid exception: {e}")
         return False
@@ -130,12 +131,12 @@ def process_module(module_name, config):
 
                 # Generate a hash of the image data
                 data_hash = hashlib.md5(frontpage_data).hexdigest()
-                cache_path = get_cache_path(prefix, data_hash)
+                cache_path = get_cache_path(prefix)
 
                 # Check if we have a cached analysis
-                if is_cache_valid(cache_path):
+                if is_cache_valid(cache_path, data_hash=data_hash):
                     with open(cache_path, 'r') as cache_file:
-                        analysis = json.load(cache_file)
+                        data = json.load(cache_file)
                 else:
                     # If not cached, call Anthropic API
                     prompt = """Please analyze this newspaper front page and provide a summary of the main headlines and stories. Focus on the most prominent news items and their significance. Format your response using HTML tags as follows:
@@ -175,12 +176,16 @@ Please ensure your response is concise, informative, and uses proper HTML format
                     analysis = response[0].text
                     
                     # Cache the analysis
+                    data = {
+                      'data_hash': data_hash,
+                      'analysis': analysis,
+                    }
                     with open(cache_path, 'w') as cache_file:
-                        json.dump(analysis, cache_file)
+                        json.dump(data, cache_file)
                 
                 frontpages[prefix] = {
                     'date': datetime.now().strftime('%Y-%m-%d'),
-                    'analysis': analysis
+                    'analysis': data['analysis']
                 }
         
         frontpages.update(common)
@@ -446,6 +451,7 @@ def generate_overview(report_data):
     summary = "Today's report includes:\n"
 
     for config in report_data:
+        if report_data[config] is None: continue
         if 'include_in_summary' not in report_data[config] or not report_data[config]['include_in_summary']: continue
         
         if config == 'weather.yml':
@@ -490,7 +496,7 @@ def generate_overview(report_data):
 
     prompt = f"""Create a concise overview of today's report, highlighting the most important points and any notable trends. The overview should be engaging, informative, and action-oriented, suitable as the opening of a daily brief email for busy professionals.
 
-Start the overview directly with the content, without any introductory phrases. The tone should be professional and insightful. Focus on providing actionable insights or key takeaways that the reader can use to inform their day.
+Start the overview directly with the content, without any introductory phrases. The tone should be professional and insightful. Focus on providing key takeaways that the reader can use to inform their day.
 
 Limit the overview to 1-3 paragraphs. Avoid broad generalizations or philosophical musings about the interconnectedness of events. Instead, concentrate on specific, important information and its potential impact on the reader's day or decisions.
 
@@ -524,6 +530,8 @@ def main():
     # Send email
     subject = f"Your Daily Brief for {datetime.now().strftime('%Y-%m-%d')}"
     send_email(subject, email_body)
+    with open('body.html', 'w') as f:
+      f.write(email_body)
     logging.info("Daily brief email sent successfully")
   except Exception as e:
     logging.error(f"Failed to generate or send daily brief: {str(e)}")
