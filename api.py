@@ -54,6 +54,21 @@ def navigate(url):
     except Exception as e:
       return str(e)
 
+def navigate_and_screenshot(url, screenshot_path="screenshot.png", width=1280, height=720):
+    try:
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+            page = browser.new_page(viewport={'width': width, 'height': height})
+            page.goto(url)
+            page.wait_for_load_state('networkidle')
+            page.wait_for_timeout(5000)  # Optional: Adjust the timeout as needed
+            page.screenshot(path=screenshot_path)
+            text = page.content()
+            browser.close()
+            return text.replace("", "<endoftext>")
+    except Exception as e:
+        return str(e)
+
 def get_url(url):
     html = navigate(url)
     if html is None: return None

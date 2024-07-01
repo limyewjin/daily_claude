@@ -45,6 +45,38 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             background-color: #ffffff;
         }
+        .traffic-section {
+            background-color: #e8f4f8;
+        }
+        .traffic-summary {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+        .traffic-details {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .traffic-item {
+            flex-basis: 48%;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .traffic-item h4 {
+            margin-top: 0;
+            color: #3498db;
+        }
+        .best-time {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
         .overview {
             background-color: #e1ecf4;
         }
@@ -158,6 +190,14 @@
             </tr>
             {% endfor %}
         </table>
+    </div>
+    {% endif %}
+
+    {% if report_data['traffic_analyzer.yml'] %}
+    <div class="section traffic-section">
+        <h2>Traffic Report: Cupertino to San Francisco</h2>
+        {{ report_data['traffic_analyzer.yml'].analysis|safe }}
+        <a href="{{ report_data['traffic_analyzer.yml'].maps_url }}" class="map-link" target="_blank">View Live Map</a>
     </div>
     {% endif %}
 

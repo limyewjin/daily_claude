@@ -17,7 +17,7 @@ import base64
 import traceback
 
 
-from api import generate_anthropic_response, send_email, fetch_crypto_data, get_url
+from api import generate_anthropic_response, send_email, fetch_crypto_data, get_url, navigate_and_screenshot
 from frontpage import fetch_paper
 from weather import extract_weather_info
 
@@ -294,6 +294,71 @@ Please ensure your response is concise, informative, and uses proper HTML format
             logging.error(f"Failed to fetch daily quote: {response.status_code}")
             return None
 
+    elif module_name == 'traffic_analyzer.yml':
+        options = config.get('options', {})
+        
+        if "days_to_run" in options:
+          days_to_run = options["days_to_run"]
+          dow = datetime.now().weekday()
+          if dow not in days_to_run:
+            logging.info(f"dow: {dow} not in days_to_run: {days_to_run}") 
+            return None
+
+        cache_path = get_cache_path(module_name)
+        ttl = config.get('cache_duration', 1800)  # Default TTL of 30 minutes
+
+        if is_cache_valid(cache_path, ttl):
+            with open(cache_path, 'r') as cache_file:
+                return json.load(cache_file)['data']
+
+        maps_url = config['maps_url']
+        screenshot_config = config['screenshot']
+        
+        # Take screenshot
+        screenshot_path = screenshot_config['filename']
+        navigate_and_screenshot(maps_url, screenshot_path, screenshot_config['width'], screenshot_config['height'])
+        
+        # Analyze screenshot with Claude
+        with open(screenshot_path, "rb") as image_file:
+            image_data = base64.b64encode(image_file.read()).decode('ascii')
+        
+        prompt = "Analyze this traffic map from Cupertino, CA to San Francisco, CA. Provide a concise summary of the current traffic conditions, estimated travel time, and any notable delays or incidents. Format your response in HTML."
+        
+        response = generate_anthropic_response(
+            [{'role': 'user',
+              'content': [
+                {
+                  'type': 'image',
+                  'source': {
+                    'type': 'base64',
+                    'media_type': 'image/png',
+                    'data': image_data,
+                  }
+                },
+                {
+                  'type': 'text',
+                  'text': prompt,
+                },
+              ]
+            }])
+        
+        traffic_analysis = response[0].text
+        
+        # Cache the analysis
+        data = {
+          'analysis': traffic_analysis,
+          'maps_url': maps_url
+        }
+        data.update(common)
+        cache_data = {
+            'timestamp': time.time(),
+            'data': data,
+        }
+        with open(cache_path, 'w') as cache_file:
+            json.dump(cache_data, cache_file)
+        
+        return data
+
     elif module_name == 'stock_market.yml':
         cache_path = get_cache_path(module_name)
         ttl = config.get('cache_duration', 3600)  # Default TTL of 1 hour
@@ -415,6 +480,9 @@ def generate_overview(report_data):
         elif config == 'daily_quote.yml':
             quote_data = report_data['daily_quote.yml']
             summary += f"- Daily Quote by {quote_data['author']}\n"
+        elif config == 'traffic_analyzer.yml':
+            traffic_data = report_data['traffic_analyzer.yml']
+            summary += f"- Traffic analysis {traffic_data['analysis']}\n"
         else:
             data = report_data[config]
             summary += f"- Unnamed data {data}\n"
