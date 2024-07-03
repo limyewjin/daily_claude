@@ -354,7 +354,7 @@ Please ensure your response is concise, informative, and uses proper HTML format
 
 <route_description>
 {route_description}
-</route_description}
+</route_description>
 
 Here's how to proceed:
 
