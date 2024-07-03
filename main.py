@@ -335,6 +335,7 @@ Please ensure your response is concise, informative, and uses proper HTML format
                 return json.load(cache_file)['data']
 
         maps_url = config['maps_url']
+        route_description = config['route_description']
         screenshot_config = config['screenshot']
 
         # Take screenshot
@@ -349,7 +350,37 @@ Please ensure your response is concise, informative, and uses proper HTML format
         with open(screenshot_path, "rb") as image_file:
             image_data = base64.b64encode(image_file.read()).decode('ascii')
 
-        prompt = "Analyze this traffic map from Cupertino, CA to San Francisco, CA. Provide a concise summary of the current traffic conditions, estimated travel time, and any notable delays or incidents. Format your response in HTML."
+        prompt = f"""You will be analyzing a traffic map based on a provided description. Your task is to provide a concise summary of the current traffic conditions, estimated travel time, and any notable delays or incidents.
+
+<route_description>
+{route_description}
+</route_description}
+
+Here's how to proceed:
+
+1. Analyze the information provided in the image description. Pay attention to:
+   - Overall traffic flow
+   - Areas of congestion
+   - Reported incidents or accidents
+   - Estimated travel times for major routes
+
+2. Formulate a concise summary of the traffic conditions. Your summary should include:
+   - A general overview of the traffic situation
+   - Specific areas experiencing heavy traffic or delays
+   - Any notable incidents or accidents affecting traffic flow
+   - Estimated travel times for key routes, if available
+
+3. Format your response in HTML. Use appropriate HTML tags to structure your summary. For example:
+   - Use <h2> for main section headings
+   - Use <p> for paragraphs
+   - Use <ul> or <ol> for lists of incidents or affected areas
+   - Use <strong> to emphasize important information
+
+4. Your response should be informative and easy to read. Focus on providing actionable information for drivers.
+
+5. Do not describe the image itself or mention that you're analyzing an image description. Present the information as if you're a traffic reporter providing real-time updates.
+
+Remember to provide a concise yet comprehensive summary of the traffic conditions based solely on the information given in the image description."""
 
         response = generate_anthropic_response(
             [{'role': 'user',
