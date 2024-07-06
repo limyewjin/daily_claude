@@ -153,7 +153,7 @@ def process_module(module_name, config):
                     prompt = """Please analyze this newspaper front page and provide a summary of the main headlines and stories. Focus on the most prominent news items and their significance. Format your response using HTML tags as follows:
 
 <h4>Top Story</h4>
-<p>[Brief summary of the <li><strong>most prominent story</strong></li>, its significance, and any key details. Remember to highlight the main story.]</p>
+<p>[Brief summary of the most prominent story, its significance, and any key details. Highlight the main story title / overview with <strong> tag.]</p>
 
 <h4>Other Major Headlines</h4>
 <ul>
