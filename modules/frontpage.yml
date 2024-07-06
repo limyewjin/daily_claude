@@ -4,7 +4,7 @@
 newspapers:
   - WSJ  # Wall Street Journal
   - NY_NYT  # New York Times
-  - WP # Washington Post
+  - DC_WP # Washington Post
 
 # Options for image processing
 image_options:
