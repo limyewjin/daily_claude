@@ -195,7 +195,6 @@
 
     {% if report_data['traffic_analyzer.yml'] %}
     <div class="section traffic-section">
-        <h2>Traffic Report: Cupertino to San Francisco</h2>
         {{ report_data['traffic_analyzer.yml'].analysis|safe }}
         <a href="{{ report_data['traffic_analyzer.yml'].maps_url }}" class="map-link" target="_blank">View Live Map</a>
     </div>
